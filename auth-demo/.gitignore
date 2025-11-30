@@ -41,4 +41,7 @@ Thumbs.db
 # Coverage tests
 coverage/
 
-# Temporary fi
+# Temporary files
+
+#DB Data
+db.sqlite
