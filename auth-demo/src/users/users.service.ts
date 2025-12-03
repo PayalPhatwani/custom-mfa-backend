@@ -33,6 +33,9 @@ export class UsersService {
         await this.usersRepo.save(user);
         console.log("user created ",user);
 
+
+
+
         // don't return password
         const { password: _, ...result} = user;
         return result;
@@ -41,4 +44,21 @@ export class UsersService {
     findByEmail(email: string){
         return this.usersRepo.findOne({ where: { email }});
     }
+
+    async validateUser(email: string, password: string){
+        const user = await this.usersRepo.findOne({where: {email}});
+
+        if (!user){
+            console.log("user not found")
+            return null; // user not found
+        }
+
+        const passwordValid = await bycrypt.compare(password,user.password);
+        if(!passwordValid){
+            console.log("wrong password")
+            return null; // wrong password
+        }
+
+        return user;
+    } 
 }
