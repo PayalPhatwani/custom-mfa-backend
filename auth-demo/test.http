@@ -6,3 +6,13 @@ Content-Type: application/json
   "email": "payal@gmail.com",
   "password": "Quantiphi@vdi2025"
 }
+
+
+###
+POST http://localhost:3000/auth/verify-mfa
+Content-Type: application/json
+
+{
+  "email": "payal@gmail.com",
+  "code": "537022"
+}

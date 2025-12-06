@@ -4,7 +4,9 @@ import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from 'src/users/users.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy } from './jwt/jwt.strategy';
+import { MfaService } from './mfa/mfa.service';
+import { EmailService } from './email.service';
 
 @Module({
   imports: [
@@ -15,7 +17,8 @@ import { JwtStrategy } from './jwt.strategy';
       signOptions: { expiresIn: '10s' }, // the JWT tolen will get expired in 1hr
     }),
   ],
-  providers: [AuthService,JwtStrategy],
-  controllers: [AuthController]
+  providers: [AuthService, JwtStrategy, MfaService, EmailService],
+  controllers: [AuthController],
+  
 })
 export class AuthModule {}

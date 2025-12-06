@@ -1,19 +1,53 @@
 import { Controller, Post, Body, UnauthorizedException, UseGuards,Get, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtAuthGuard } from './jwt/jwt-auth.guard';
+import { MfaService } from './mfa/mfa.service';
+import { EmailService } from './email.service';
+import { VerifyMfaDto } from './dto/verify-mfa.dto';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService){} // constructor dependency injection
+    constructor(private authService: AuthService, private mfaService: MfaService, private emailService: EmailService){} // constructor dependency injection
 
     @Post('login')
     async login(@Body() loginDto: LoginUserDto){
         const user = await this.authService.validateUser(loginDto.email,loginDto.password);
         if(!user) throw new UnauthorizedException('Invalid credentials');
 
-        return this.authService.login(user);
+        // TODO: generate and/or send MFA code using mfaService
+        // e.g. await this.mfaService.generateCode(user);
+        const code = await this.mfaService.generateCode();
+        this.mfaService.storeCode(user.email,code);
+
+        // await this.emailService.sendMfaToken(user.email,code);
+        console.log("TOKEN------------------->",user.email,code)
+
+        // return this.authService.login(user);
+        return {
+            status: 'MFA_REQUIRED',
+            userId: user.id,
+        };
     }
+
+    @Post('verify-mfa')
+    async verifyMfa(@Body() dto: VerifyMfaDto){
+      const success = this.mfaService.verifyCode(dto.email,dto.code);
+      console.log("code in auth controller verify method: ",dto.code)
+    
+      if(!success){
+        console.log("invalid code from auth control verify-mfa",success)
+        return { message: 'Invalid or expired MFA code'};
+      }
+      const user = await this.authService.findByEmail(dto.email);
+      console.log("userrrrrrrr====",user);
+      const access_token = await this.authService.login(user)
+      return {
+    status: 'SUCCESS',
+    token: access_token,
+  };
+}
+    
 
     @UseGuards(JwtAuthGuard) // [1]
     @Get('home')
