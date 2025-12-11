@@ -1,32 +1,35 @@
 import { Injectable } from "@nestjs/common";
-import axios from "axios";
-import { Subject } from "rxjs";
+import * as nodemailer from "nodemailer";
 
- @Injectable()
- export class EmailService{
-    private SENDMATOR_API_URL= "https://api.sendmator.com/v1/send";
-    private API_KEY="enter api key";
-    
-    async sendMfaToken(email: string,code:string){
-        try{
-            const response = await axios.post(
-                this.SENDMATOR_API_URL,{
-                    to: email,
-                    subject: "Your MFA Verification Code",
-                    text: `Your verification code is ${code}`,
-                },
-                {
-                    headers:{
-                        "Content-Type":"application/json",
-                        "Authorization":`Bearer ${this.API_KEY}`,
-                    },
-                }
-            );
+@Injectable()
+export class EmailService {
+  private transporter;
 
-            return response.data
-        }catch (err){
-            console.error("Sendmator Error", err.response?.data || err.message);
-            throw new Error('Failed to send MFA email');
-        }
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false, // TLS
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_APP_PASSWORD,
+      },
+    });
+  }
+
+  async sendMfaToken(email: string, code: string) {
+    try {
+      const info = await this.transporter.sendMail({
+        from: `"OTP (Custom MFA Project)" <${process.env.SMTP_EMAIL}>`,
+        to: email,
+        subject: "Your MFA Verification Code",
+        text: `Your verification code is ${code}. It is valid for 10 minutes.`,
+      });
+
+      return info;
+    } catch (err) {
+      console.error("Email Error:", err);
+      throw new Error("Failed to send MFA email");
     }
- }
+  }
+}

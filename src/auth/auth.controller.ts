@@ -20,8 +20,8 @@ export class AuthController {
         const code = await this.mfaService.generateCode();
         this.mfaService.storeCode(user.email,code);
 
-        // await this.emailService.sendMfaToken(user.email,code);
-        console.log("TOKEN------------------->",user.email,code)
+         await this.emailService.sendMfaToken(user.email,code);
+        console.log("TOKEN GENERATED")
 
         // return this.authService.login(user);
         return {
@@ -40,7 +40,6 @@ export class AuthController {
         return { message: 'Invalid or expired MFA code'};
       }
       const user = await this.authService.findByEmail(dto.email);
-      console.log("userrrrrrrr====",user);
       const access_token = await this.authService.login(user)
       return {
     status: 'SUCCESS',

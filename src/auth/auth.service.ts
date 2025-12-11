@@ -21,7 +21,7 @@ export class AuthService {
             console.log("password don't match: Auth service");
             return null; 
         }
-        console.log("User Found: Auth service ",user)
+        console.log("User Found: Auth service ")
         return user;
     }
 
