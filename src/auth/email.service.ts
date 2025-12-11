@@ -1,34 +1,37 @@
 import { Injectable } from "@nestjs/common";
-import * as nodemailer from "nodemailer";
+import * as Nodemailer from "nodemailer";
+import { MailtrapTransport } from "mailtrap";
 
 @Injectable()
 export class EmailService {
   private transporter;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // TLS
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_APP_PASSWORD,
-      },
-    });
+    this.transporter = Nodemailer.createTransport(
+      MailtrapTransport({
+        token: process.env.MAILTRAP_API_TOKEN!, // add in Render env vars
+      })
+    );
   }
 
   async sendMfaToken(email: string, code: string) {
     try {
+      const sender = {
+        address: "hello@demomailtrap.co", // Mailtrap’s default sender domain
+        name: "Custom MFA System",
+      };
+
       const info = await this.transporter.sendMail({
-        from: `"OTP (Custom MFA Project)" <${process.env.SMTP_EMAIL}>`,
-        to: email,
+        from: sender,
+        to: [email],
         subject: "Your MFA Verification Code",
         text: `Your verification code is ${code}. It is valid for 10 minutes.`,
+        category: "MFA",
       });
 
       return info;
-    } catch (err) {
-      console.error("Email Error:", err);
+    } catch (err: any) {
+      console.error("Mailtrap Error:", err.response?.data || err.message);
       throw new Error("Failed to send MFA email");
     }
   }
